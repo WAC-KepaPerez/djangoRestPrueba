@@ -1,0 +1,12 @@
+# Ignore the virtual environment directory
+entorno_virtual/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# Ignore sensitive data (e.g., secret keys, passwords)
+*.env
+
+# Ignore user-uploaded media files (if applicable)
+media/
