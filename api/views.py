@@ -24,7 +24,23 @@ def getItem(request,item_id):
 
 @api_view(['POST'])
 def addItem(request):
-    serializer=ItemSerializer(data=request.data)
+   # serializer=ItemSerializer(data=request.data)
+   #  if serializer.is_valid():
+   #      serializer.create()
+    # return Response(serializer.data)
+    data = request.data
+    item = Item.objects.create(
+        name=data['name']
+    )
+    serializer =ItemSerializer(item,many=False)
+    return Response(serializer.data)
+
+
+@api_view(['PUT'])
+def updateItem(request,item_id):
+    data = request.data
+    item = Item.objects.get(id=item_id)
+    serializer =ItemSerializer(item,data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
