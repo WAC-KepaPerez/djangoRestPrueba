@@ -8,9 +8,29 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def getItems(request):
-    items=Item.objects.all()
+    user=request.user
+    items=user.item_set.all()
     serializer=ItemSerializer(items,many=True)
     return Response(serializer.data)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deleteItem(request,item_id):
+    #item = Item.objects.get(id=item_id)
+    #item.delete()
+    #return Response("Nore was deleted")
+
+    try:
+        item = Item.objects.get(id=item_id)
+        
+        # Check if the user making the request is the owner of the item
+        if item.user == request.user:
+            item.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"message": "You are not authorized to delete this item."}, status=status.HTTP_403_FORBIDDEN)
+    except Item.DoesNotExist:
+        return Response({"message": "Item not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])
@@ -47,8 +67,3 @@ def updateItem(request,item_id):
         serializer.save()
     return Response(serializer.data)
 
-@api_view(['DELETE'])
-def deleteItem(request,item_id):
-    item = Item.objects.get(id=item_id)
-    item.delete()
-    return Response("Nore was deleted")
