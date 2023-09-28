@@ -44,3 +44,9 @@ def updateItem(request,item_id):
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
+
+@api_view(['DELETE'])
+def deleteItem(request,item_id):
+    item = Item.objects.get(id=item_id)
+    item.delete()
+    return Response("Nore was deleted")
