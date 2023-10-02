@@ -4,6 +4,16 @@ from rest_framework import status
 from base.models import Item
 from .serializer import ItemSerializer
 from rest_framework.permissions import IsAuthenticated
+import firebase_admin
+from firebase_admin import credentials, messaging
+import os
+
+# Initialize Firebase
+json_file_path = os.path.abspath("gongo-50bb7-firebase-adminsdk-9nbod-d34b4a74d0.json")
+
+firebase_cred = credentials.Certificate(json_file_path)
+firebase_admin.initialize_app(firebase_cred)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -13,13 +23,11 @@ def getItems(request):
     serializer=ItemSerializer(items,many=True)
     return Response(serializer.data)
 
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def deleteItem(request,item_id):
-    #item = Item.objects.get(id=item_id)
-    #item.delete()
-    #return Response("Nore was deleted")
-
     try:
         item = Item.objects.get(id=item_id)
         
@@ -32,16 +40,6 @@ def deleteItem(request,item_id):
     except Item.DoesNotExist:
         return Response({"message": "Item not found."}, status=status.HTTP_404_NOT_FOUND)
 
-
-@api_view(['GET'])
-def getItem(request,item_id):
-    try:
-        item = Item.objects.get(id=item_id)
-    except Item.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    serializer = ItemSerializer(item)
-    return Response(serializer.data)
 
 
 @api_view(['POST'])
@@ -67,3 +65,46 @@ def updateItem(request,item_id):
         serializer.save()
     return Response(serializer.data)
 
+
+
+@api_view(['GET'])
+def getItem(request,item_id):
+    try:
+        item = Item.objects.get(id=item_id)
+    except Item.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ItemSerializer(item)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def send_notification(request):
+    data = request.data
+    token = data.get('token')
+    titulo = data.get('titulo')
+    cuerpo = data.get('cuerpo')
+
+    if not token or not titulo:
+        return Response({'error': 'some data missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Send Firebase notification
+    message = messaging.Message(
+        token=token,
+        android=messaging.AndroidConfig(
+            notification=messaging.AndroidNotification(
+                title=titulo,
+                body=cuerpo,
+                icon="myicon",
+            ),
+        ),
+        data={"id_pedido": "123456", "estado": "apagado"},
+    )
+
+    try:
+        response = messaging.send(message)
+        print("Notificación enviada con éxito:", response)
+        return Response({'okey': 'sendNotification'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print("Error al enviar la notificación:", str(e))
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -12,5 +12,6 @@ urlpatterns=[
     path('<int:item_id>/', views.getItem),
     path('add/',views.addItem),
     path('<int:item_id>/update/',views.updateItem),
-     path('<int:item_id>/delete/',views.deleteItem),
+    path('<int:item_id>/delete/',views.deleteItem),
+    path('sendNotification', views.send_notification),
 ]
