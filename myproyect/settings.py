@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'base',
     'rest_framework_simplejwt.token_blacklist',
     'firebase_admin',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
@@ -51,7 +52,7 @@ REST_FRAMEWORK = {
     
 }
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -98,7 +99,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  
+   
+]
+
+# Optional: Allow credentials (cookies) in cross-origin requests
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'myproyect.urls'
 

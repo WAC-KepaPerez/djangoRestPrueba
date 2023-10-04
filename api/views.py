@@ -81,9 +81,11 @@ def getItem(request,item_id):
 @api_view(['POST'])
 def send_notification(request):
     data = request.data
-    token = data.get('token')
+    
     titulo = data.get('titulo')
     cuerpo = data.get('cuerpo')
+    token = data.get('token')
+    type= data.get('type')
 
     if not token or not titulo:
         return Response({'error': 'some data missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -98,7 +100,7 @@ def send_notification(request):
                 icon="myicon",
             ),
         ),
-        data={"id_pedido": "123456", "estado": "apagado"},
+        data={"notificationType": type},
     )
 
     try:

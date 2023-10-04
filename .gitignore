@@ -1,6 +1,7 @@
 # Ignore the virtual environment directory
 entorno_virtual/
-
+client/node_modules
+node_modules
 # Ignore compiled Python files
 __pycache__/
 *.pyc
