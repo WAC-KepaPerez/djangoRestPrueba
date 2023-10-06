@@ -47,7 +47,7 @@ export default function Login({setUser}) {
     return (
         <>
             <h2 style={{ color: "white" }}>Login</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} >
                 <div>
                     <label style={{ color: 'white' }}>Username:</label>
                     <input

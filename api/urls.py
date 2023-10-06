@@ -9,6 +9,8 @@ from rest_framework_simplejwt.views import (
 urlpatterns=[
     path('token/', notasViews.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('register/', views.RegisterView.as_view(), name='register'),
+    path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
 
     path('',views.getItems),
     path('<int:item_id>/', views.getItem),

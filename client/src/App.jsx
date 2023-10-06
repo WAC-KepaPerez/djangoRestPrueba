@@ -62,7 +62,7 @@ function App() {
   }
   if (user) {
     return (
-      <Home logout={logout} token={user.access} />
+      <Home logout={logout} token={user.access} user={user} />
     )
   } else {
     return (

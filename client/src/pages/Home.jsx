@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import '../App.css'
 
-function Home({ logout,token }) {
+function Home({ logout, token, user }) {
     const [notas, setNotas] = useState([])
     const [value, setValue] = useState('')
     const [error, setError] = useState()
@@ -27,9 +27,7 @@ function Home({ logout,token }) {
 
         getData();
     }, [])
-    const changeCheck = (id) => {
 
-    }
 
     const deleteNote = async (id) => {
         try {
@@ -123,11 +121,20 @@ function Home({ logout,token }) {
 
     return (
         <>
-            <button onClick={logout}>LogOut</button>
-            <h1>Mis Notas</h1>
-            <div>
-                <input type='text' onChange={(e) => setValue(e.target.value)} value={value} />
-                <div style={{ color: 'red' }}>{error}</div>
+            <div className='topNav'>
+                <h1 style={{ color: 'white' }}>Mis Notas</h1>
+
+                <div className='navCtn1'>
+                    <span>{user.username}</span>
+                    <button onClick={logout}>LogOut</button>
+                </div>
+            </div>
+
+            <div className='crearnotaCtn'>
+                <div>
+                    <input type='text' onChange={(e) => setValue(e.target.value)} value={value} />
+                    <div style={{ color: 'red' }}>{error}</div>
+                </div>
                 <button onClick={createNote}>Create Neww</button>
             </div>
             <div className='notasCtn'>

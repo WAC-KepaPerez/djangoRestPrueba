@@ -2,11 +2,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework import status
 from base.models import Item
-from .serializer import ItemSerializer
-from rest_framework.permissions import IsAuthenticated
+from .serializer import ItemSerializer,CustomUserSerializer,ChangePasswordSerializer
+from rest_framework.permissions import IsAuthenticated,AllowAny
 import firebase_admin
 from firebase_admin import credentials, messaging
 import os
+from rest_framework.generics import CreateAPIView,UpdateAPIView
+
 
 # Initialize Firebase
 json_file_path = os.path.abspath("gongo-50bb7-firebase-adminsdk-9nbod-d34b4a74d0.json")
@@ -14,6 +16,33 @@ json_file_path = os.path.abspath("gongo-50bb7-firebase-adminsdk-9nbod-d34b4a74d0
 firebase_cred = credentials.Certificate(json_file_path)
 firebase_admin.initialize_app(firebase_cred)
 
+class RegisterView(CreateAPIView):
+    serializer_class = CustomUserSerializer
+    
+    permission_classes = [AllowAny]
+
+class ChangePasswordView(UpdateAPIView):
+    serializer_class = ChangePasswordSerializer  # Create this serializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            # Check if the current password matches
+            if not user.check_password(serializer.data.get('current_password')):
+                return Response({'current_password': ['Wrong password.']}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Set the new password and save the user
+            user.set_password(serializer.data.get('new_password'))
+            user.save()
+            return Response({'message': 'Password updated successfully.'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -110,3 +139,5 @@ def send_notification(request):
     except Exception as e:
         print("Error al enviar la notificación:", str(e))
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+ 
