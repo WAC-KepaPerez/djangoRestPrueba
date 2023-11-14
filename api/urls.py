@@ -22,4 +22,10 @@ urlpatterns=[
     path('notas/',notasViews.getNotas ),
     path('notas/add',notasViews.addNota),
     path('notas/<int:nota_id>',notasViews.notaDetails),
+
+    #path('posts/create/', views.MyModelAPIView.as_view(), name='post-create'),
+    path('posts/create/', views.PostCreateView.as_view(), name='post-create'),
+    path('posts/', views.PostListView.as_view(), name='post-list'),
 ]
+
+

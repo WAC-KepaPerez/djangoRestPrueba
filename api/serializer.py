@@ -1,7 +1,17 @@
 from rest_framework import serializers
-from base.models import Item,Nota,CustomUser
+from base.models import Item,Nota,CustomUser,Post,MyModel
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+
+
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ('id', 'name', 'post_id', 'image')
+class MyModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyModel
+        fields = '__all__'
 
 CustomUser = get_user_model()
 class ItemSerializer(serializers.ModelSerializer):

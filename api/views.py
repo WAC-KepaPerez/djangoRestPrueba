@@ -2,14 +2,17 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework import status
 from base.models import Item
-from .serializer import ItemSerializer,CustomUserSerializer,ChangePasswordSerializer
+from .serializer import ItemSerializer,CustomUserSerializer,ChangePasswordSerializer,PostSerializer,MyModelSerializer
 from rest_framework.permissions import IsAuthenticated,AllowAny
 import firebase_admin
 from firebase_admin import credentials, messaging
 import os
 from rest_framework.generics import CreateAPIView,UpdateAPIView
-
-
+from rest_framework import generics
+from base.models import Post
+from rest_framework.views import APIView
+from django.http import HttpResponse, JsonResponse
+from django.db import connection
 # Initialize Firebase
 json_file_path = os.path.abspath("gongo-50bb7-firebase-adminsdk-9nbod-d34b4a74d0.json")
 
@@ -140,4 +143,54 @@ def send_notification(request):
         print("Error al enviar la notificación:", str(e))
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
+class PostCreateView(generics.CreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+
+
+class PostListView(APIView):
+
+     def get(self, request):
+        data = request.data
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM base_post")
+            result = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description] 
+
+        if not result:
+            return Response({"detail": "Establecimiento no encontrado"}, status=404)
+        data = []
+        for row in result:
+            data_row = {}
+            for i, column_name in enumerate(column_names):
+                data_row[column_name] = row[i]
+            data.append(data_row)
+
+        for item in data:
+            if 'image' in item:
+                # Assuming your images are stored in the media folder
+                static_path = f'/media/{item["image"]}'
+                api_url = request.build_absolute_uri(static_path)
+                item['api_url'] = api_url
+
+        return Response(data)
+    
+
+   
  
+
+class MyModelAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = MyModelSerializer(data=request.data)
+        if serializer.is_valid():
+            # Step 2: Save the image to a folder
+            instance = serializer.save()
+
+            # Step 3: Generate the static path
+            static_path = f'/static/{instance.image.name}'  # Adjust based on your project structure
+            
+            # Step 4: Call the database procedure with the static path
+            # Your logic to call the database procedure goes here
+
+            return Response({'static_path': static_path}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

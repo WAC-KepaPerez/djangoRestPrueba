@@ -31,21 +31,28 @@ def addNota(request):
 @api_view(['DELETE','PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def notaDetails(request,nota_id):
-    nota = Nota.objects.get(id=nota_id)
-    user = request.user
-    if request.method == 'DELETE':
-        nota.delete()
-        return Response({"message": "Nota eliminada"},status=status.HTTP_204_NO_CONTENT)
-    
+    try:
+        nota = Nota.objects.get(id=nota_id)
+        user = request.user
 
-    elif request.method in ['PUT', 'PATCH']:
-        newNota = request.data
-        print(type(newNota))
-        newNota["user"]= user.pk
-        serializer =NotaSerializer(nota,data=newNota)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if user.pk == nota.user.pk:
+            if request.method == 'DELETE':
+                nota.delete()
+                return Response({"message": "Nota eliminada"},status=status.HTTP_204_NO_CONTENT)
+            
+        elif request.method in ['PUT', 'PATCH']:
+            newNota = request.data
+            print(type(newNota))
+            newNota["user"]= user.pk
+            serializer =NotaSerializer(nota,data=newNota)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "This is not your content"},status=status.HTTP_400_BAD_REQUEST)
+    except Nota.DoesNotExist:
+        return Response({"error": "Note does not exist"},status=status.HTTP_400_BAD_REQUEST)
+
+   
 
         
