@@ -55,7 +55,9 @@ def getItems(request):
     serializer=ItemSerializer(items,many=True)
     return Response(serializer.data)
 
-
+@api_view(['GET'])
+def pon(request):
+    return Response({"pon"})
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

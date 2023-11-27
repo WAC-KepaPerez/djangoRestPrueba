@@ -16,6 +16,7 @@ def getNotas(request):
     serializer=NotaSerializer(notas,many=True)
     return Response(serializer.data)
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def addNota(request):
