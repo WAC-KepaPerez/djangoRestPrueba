@@ -13,7 +13,9 @@ from base.models import Post
 from rest_framework.views import APIView
 from django.http import HttpResponse, JsonResponse
 from django.db import connection
-# Initialize Firebase
+import logging
+
+logger = logging.getLogger(__name__)
 json_file_path = os.path.abspath("gongo-50bb7-firebase-adminsdk-9nbod-d34b4a74d0.json")
 
 firebase_cred = credentials.Certificate(json_file_path)
@@ -57,7 +59,15 @@ def getItems(request):
 
 @api_view(['GET'])
 def pon(request):
-    return Response({"pon"})
+        try:
+        # Your view logic here
+        # ...
+
+         return Response({"pon"})
+        except Exception as e:
+            logger.error(f"Error in pin_view: {e}")
+        return HttpResponse("Internal Server Error", status=500)
+
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
