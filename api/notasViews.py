@@ -18,7 +18,7 @@ def getNotas(request):
 
 
 @api_view(['POST'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def addNota(request):
     data = request.data
     user = request.user

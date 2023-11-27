@@ -159,34 +159,16 @@ class PostCreateView(generics.CreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
 
+@api_view(['GET'])
+def PostListView(request):
+    posts = Post.objects.all()
+    serializer = PostSerializer(posts, many=True, context={'request': request})
 
-class PostListView(APIView):
+    # Dynamically construct the full URL for each image
+    for post_data in serializer.data:
+        post_data['image'] = request.build_absolute_uri(post_data['image'])
 
-     def get(self, request):
-        data = request.data
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM base_post")
-            result = cursor.fetchall()
-            column_names = [desc[0] for desc in cursor.description] 
-
-        if not result:
-            return Response({"detail": "Establecimiento no encontrado"}, status=404)
-        data = []
-        for row in result:
-            data_row = {}
-            for i, column_name in enumerate(column_names):
-                data_row[column_name] = row[i]
-            data.append(data_row)
-
-        for item in data:
-            if 'image' in item:
-                # Assuming your images are stored in the media folder
-                static_path = f'/media/{item["image"]}'
-                api_url = request.build_absolute_uri(static_path)
-                item['api_url'] = api_url
-
-        return Response(data)
-    
+    return Response(serializer.data)
 
    
  
