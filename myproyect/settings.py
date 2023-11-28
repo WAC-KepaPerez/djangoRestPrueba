@@ -153,6 +153,7 @@ DATABASES = {
     )
 
 }
+DATABASES["default"]=dj_database_url.parse("postgres://djnagopruebas_bbbdd_user:I6qcb5rrX2r6l2BGG6vH5tQ90rPFTifc@dpg-cli62okig7qc73eq3770-a.frankfurt-postgres.render.com/djnagopruebas_bbbdd")
 AUTH_USER_MODEL = 'base.CustomUser'
 
 # Password validation
