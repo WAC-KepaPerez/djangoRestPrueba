@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='django-insecure-4*)n2rv=y8o!ql_j_px1(_4k0lxt45hku#%d^i56%h_u_=&-ru')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = 'RENDER' not in os.environ
+DEBUG = True
 
 ALLOWED_HOSTS = [ "192.168.0.13","192.168.1.48"]
 
@@ -151,19 +151,7 @@ DATABASES = {
         default='sqlite:/db.sqlite3',
         conn_max_age=600
     )
-   # 'default': {
-    #   'ENGINE': 'django.db.backends.sqlite3',
-    #    'NAME': BASE_DIR / 'db.sqlite3',
-   # }
-    
-    #  'default': {
-    #    'ENGINE': 'django.db.backends.mysql',
-    #    'NAME': 'taskDjango',
-    #    'USER': 'root',
-    #    'PASSWORD': '',
-    #    'HOST': 'localhost',  # or the hostname where your MySQL server is running
-    #    'PORT': '3306',      # or the port on which your MySQL server is listening
-    #}
+
 }
 AUTH_USER_MODEL = 'base.CustomUser'
 
