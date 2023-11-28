@@ -164,12 +164,10 @@ def PostListView(request):
     posts = Post.objects.all()
     serializer = PostSerializer(posts, many=True, context={'request': request})
 
-    # Dynamically construct the full URL for each image
-    for post_data in serializer.data:
-        post_data['image'] = request.build_absolute_uri(post_data['image'])
+    # No need to construct the full URL if it's already present in the 'image' field
+    # If 'image' already contains the full URL, you can remove the loop below
 
     return Response(serializer.data)
-
    
  
 
