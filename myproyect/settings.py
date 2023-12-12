@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='django-insecure-4*)n2rv=y8o!q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG =  True
 
-ALLOWED_HOSTS = [ "192.168.0.13","192.168.1.48","127.0.0.1"]
+ALLOWED_HOSTS = [ "192.168.0.13","192.168.1.48","127.0.0.1","djangoprueba-3d3a254dd2a3.herokuapp.com"]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
