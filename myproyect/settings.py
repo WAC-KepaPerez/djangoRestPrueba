@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'firebase_admin',
     'corsheaders',
+    'wacchat'
 ]
 
 REST_FRAMEWORK = {

@@ -19,7 +19,7 @@ urlpatterns=[
     path('add/',views.addItem),
     path('<int:item_id>/update/',views.updateItem),
     path('<int:item_id>/delete/',views.deleteItem),
-    path('sendNotification', views.send_notification),
+    path('sendNotification/', views.send_notification),
 
     path('notas/',notasViews.getNotas ),
     path('notas/add',notasViews.addNota),
