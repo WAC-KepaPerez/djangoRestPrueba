@@ -5,6 +5,8 @@ from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework import status
 from dotenv import load_dotenv
+
+import pandas as pd
 import os
 load_dotenv()
 
@@ -24,25 +26,29 @@ def pon(request):
 
 class SubirPost(APIView):
   def post(self, request):
-    
- 
 
     if not request.body:
       return JsonResponse({'error': 'Empty request body'}, status=400)
     body_unicode = request.body.decode('utf-8')
     body = json.loads(body_unicode)
+
+
     openai_wac_chat_api_key = body['openai_wac_chat_api_key']
-    openai_wac_chat_model = body['openai_wac_chat_model']
-    openai_wac_chat_token_limit = body['openai_wac_chat_token_limit']
-    openai_wac_chat_temperature = body['openai_wac_chat_temperature']
+    
     pinecone_wac_chat_api_key = body['pinecode_wac_chat_api_key']
+    #pinecode_wac_chat_unpload_option = body['pinecode_wac_chat_unpload_option']
+    pinecode_wac_chat_index=body['pinecode_wac_chat_index']
+
     post = body['post']
     vectors=[]
 
+
     pc = Pinecone(api_key=pinecone_wac_chat_api_key)
     client = OpenAI(api_key=openai_wac_chat_api_key)
-    index = pc.Index('movies') 
+    index = pc.Index(pinecode_wac_chat_index) 
     
+    #if pinecode_wac_chat_unpload_option == "excel":
+    # index.delete(delete_all=True, namespace='ns1')
     try:
       postData=  str(post)
       response = client.embeddings.create(
@@ -68,7 +74,6 @@ class SubirPost(APIView):
         return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)   
 
 
-
 class Chat(APIView):
   def post(self, request):
     
@@ -78,16 +83,23 @@ class Chat(APIView):
     body_unicode = request.body.decode('utf-8')
     body = json.loads(body_unicode)
 
-    print(body['message'])
+    print(body)
     messagesCliente = body['message']
+
     openai_wac_chat_api_key = body['openai_wac_chat_api_key']
     openai_wac_chat_model = body['openai_wac_chat_model']
     openai_wac_chat_token_limit = body['openai_wac_chat_token_limit']
     openai_wac_chat_temperature = body['openai_wac_chat_temperature']
+    openai_wac_chat_promp = body['openai_wac_chat_promp']
+
     pinecone_wac_chat_api_key = body['pinecode_wac_chat_api_key']
+    pinecode_wac_chat_index=body['pinecode_wac_chat_index']
+
+
+    
     
     pc = Pinecone(api_key=pinecone_wac_chat_api_key)
-    index = pc.Index('movies') 
+    index = pc.Index(pinecode_wac_chat_index) 
     client = OpenAI(api_key=openai_wac_chat_api_key)
 
 
@@ -118,7 +130,7 @@ class Chat(APIView):
       messagesAPI=[
           {
             "role": "system", 
-            "content": "Actúa como un asistente buscador de comercios. Tu labor será la de asistir al usuario en las dudas que tenga sobre los establecimientos registrados. Se te dará un user prompt y los metadatos de una página de wordpress con la ficha de los establecimientos obtenidos mediante embedding. No saques respuestas de más de 250 tokens. Saca siempre el nombre del establecimiento que a su vez será un enlace a la ficha. Este enlace será la url del establecimiento entre etiquetas <a> html como un link."
+            "content": str(openai_wac_chat_promp)
           },
           {
             "role": "user",
@@ -142,3 +154,71 @@ class Chat(APIView):
         return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)   
 
 
+class BorrarEmbeddings(APIView):
+  def post(self, request):
+    
+    if not request.body:
+      return JsonResponse({'error': 'Empty request body'}, status=400)
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    pinecone_wac_chat_api_key = body['pinecode_wac_chat_api_key']
+    pinecode_wac_chat_index=body['pinecode_wac_chat_index']
+
+    pc = Pinecone(api_key=pinecone_wac_chat_api_key)
+    index = pc.Index(pinecode_wac_chat_index) 
+
+    try:
+      delete_response=  index.delete(delete_all=True, namespace='ns1')
+      return Response({'status': "succes"}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': "error", "error":"an error"}, status=status.HTTP_400_BAD_REQUEST)   
+
+
+
+
+class SubirPostExcel(APIView):
+    def post(self, request):
+        excel_file = request.FILES['file']
+        pc = Pinecone(api_key="f62a1117-8a45-41f5-913f-b28fe0e4bf3d")
+        client = OpenAI(api_key="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")
+        indexPC = pc.Index("movies") 
+        try:
+            df = pd.read_excel(excel_file)
+            json_data = df.to_json(orient='records',force_ascii=False)
+          
+            modified_string = json_data.replace("\\", "")
+            json_data = json.loads(modified_string)
+            vectors=[]
+
+            for index,item in enumerate(json_data):
+              print(index,item)
+              try:
+                response = client.embeddings.create(
+                input=item,
+                model="text-embedding-3-small"
+                )
+                vectors.append(
+                  {
+                  "id": str(index), 
+                  "values": response.data[0].embedding, 
+                  "metadata": item
+                  },
+                )
+              except Exception as e:
+                  print("An error occurred:", str(e))
+                  return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)
+
+            #subir a pinecone 
+            try:
+              response=indexPC.upsert(
+                vectors=vectors,
+                namespace="ns1"
+                )
+              print(response)
+            except Exception as e:
+                  print("An error occurred:", str(e))
+                  return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(json_data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
