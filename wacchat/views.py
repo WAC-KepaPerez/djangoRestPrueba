@@ -174,14 +174,20 @@ class BorrarEmbeddings(APIView):
         return Response({'status': "error", "error":"an error"}, status=status.HTTP_400_BAD_REQUEST)   
 
 
-
-
 class SubirPostExcel(APIView):
     def post(self, request):
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        
+        openai_wac_chat_api_key = body['openai_wac_chat_api_key']
+        pinecone_wac_chat_api_key = body['pinecode_wac_chat_api_key']
+        pinecode_wac_chat_index=body['pinecode_wac_chat_index']
+
         excel_file = request.FILES['file']
-        pc = Pinecone(api_key="")
-        client = OpenAI(api_key="")
-        indexPC = pc.Index("movies") 
+        pc = Pinecone(api_key=pinecone_wac_chat_api_key)
+        client = OpenAI(api_key=openai_wac_chat_api_key)
+        indexPC = pc.Index(pinecode_wac_chat_index) 
+        
         try:
             df = pd.read_excel(excel_file)
             json_data = df.to_json(orient='records',force_ascii=False)
