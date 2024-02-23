@@ -179,8 +179,8 @@ class BorrarEmbeddings(APIView):
 class SubirPostExcel(APIView):
     def post(self, request):
         excel_file = request.FILES['file']
-        pc = Pinecone(api_key="f62a1117-8a45-41f5-913f-b28fe0e4bf3d")
-        client = OpenAI(api_key="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")
+        pc = Pinecone(api_key="")
+        client = OpenAI(api_key="")
         indexPC = pc.Index("movies") 
         try:
             df = pd.read_excel(excel_file)
