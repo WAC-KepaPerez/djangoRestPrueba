@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='django-insecure-4*)n2rv=y8o!q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG =  True
 
-ALLOWED_HOSTS = [ "192.168.0.13","192.168.1.48","127.0.0.1","djangoprueba-3d3a254dd2a3.herokuapp.com"]
+ALLOWED_HOSTS = [ "192.168.0.13","192.168.1.48","127.0.0.1","djangoprueba-3d3a254dd2a3.herokuapp.com","localhost"]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
@@ -38,6 +38,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,6 +52,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'wacchat'
 ]
+
+ASGI_APPLICATION = 'myproyect.asgi.application'
 
 REST_FRAMEWORK = {
     
