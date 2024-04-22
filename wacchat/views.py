@@ -5,6 +5,11 @@ from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework import status
 from dotenv import load_dotenv
+import uuid
+
+
+
+
 
 import pandas as pd
 import os
@@ -13,8 +18,8 @@ load_dotenv()
 # Access environment variables
 PINECODE_API_KEY = os.getenv("PINECODE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-from openai import OpenAI
+import openai
+from openai import OpenAI,APIConnectionError
 from pinecone import Pinecone,ServerlessSpec
 
 
@@ -46,6 +51,12 @@ class SubirPost(APIView):
     pc = Pinecone(api_key=pinecone_wac_chat_api_key)
     client = OpenAI(api_key=openai_wac_chat_api_key)
     index = pc.Index(pinecode_wac_chat_index) 
+
+    #Eliminar todos los registros anterirores
+    try:
+        delete_response=  index.delete(delete_all=True, namespace='ns1')
+    except Exception as e:
+        print("Error al eliminar index,pueder que no exista") 
     
     #if pinecode_wac_chat_unpload_option == "excel":
     # index.delete(delete_all=True, namespace='ns1')
@@ -176,55 +187,72 @@ class BorrarEmbeddings(APIView):
 
 class SubirPostExcel(APIView):
     def post(self, request):
-        body_unicode = request.body.decode('utf-8')
-        body = json.loads(body_unicode)
-        
-        openai_wac_chat_api_key = body['openai_wac_chat_api_key']
-        pinecone_wac_chat_api_key = body['pinecode_wac_chat_api_key']
-        pinecode_wac_chat_index=body['pinecode_wac_chat_index']
+      #body_unicode = request.body.decode('utf-8')
+      #body = json.loads(body_unicode)
+      body = request.data
+      
+      openai_wac_chat_api_key = body.get('openai_wac_chat_api_key')
+      pinecone_wac_chat_api_key = body.get('pinecode_wac_chat_api_key')
+      pinecode_wac_chat_index=body.get('pinecode_wac_chat_index')
 
-        excel_file = request.FILES['file']
-        pc = Pinecone(api_key=pinecone_wac_chat_api_key)
-        client = OpenAI(api_key=openai_wac_chat_api_key)
-        indexPC = pc.Index(pinecode_wac_chat_index) 
+      excel_file = request.FILES['file']
+      pc = Pinecone(api_key=pinecone_wac_chat_api_key)
+      client = OpenAI(api_key=openai_wac_chat_api_key)
+      indexPC = pc.Index(pinecode_wac_chat_index)
+
+
+
+      #Eliminar todos los registros anterirores
+      try:
+          delete_response=  indexPC.delete(delete_all=True, namespace='ns1')
+      except Exception as e:
+          print("Error al eliminar index,pueder que no exista") 
+      
+      #get json
+      try:
+          df = pd.read_excel(excel_file)
+          json_data = df.to_json(orient='records',force_ascii=False)
         
-        try:
-            df = pd.read_excel(excel_file)
-            json_data = df.to_json(orient='records',force_ascii=False)
+          modified_string = json_data.replace("\\", "")
+          json_data = json.loads(modified_string)
+          vectors=[]
+      except Exception as e:
+                print("An error occurred Converting excel to json:", str(e))
+                return Response({'status': "error", "error":"An error occurred Converting excel to json:"}, status=status.HTTP_400_BAD_REQUEST)
+      try:
+        for row in json_data:
+          postData=  str(row)
+          try:
+            response = client.embeddings.create(
+            input=postData,
+            model="text-embedding-3-small"
+            )
+          except openai.APIConnectionError as e:
+              print("The server could not be reached")
+              print(e.__cause__)  # an underlying Exception, likely raised within httpx.
+          except openai.RateLimitError as e:
+              print("A 429 status code was received; we should back off a bit.")
+          except openai.APIStatusError as e:
+              print("Another non-200-range status code was received")
+              print(e.status_code)
+              print(e.response)
           
-            modified_string = json_data.replace("\\", "")
-            json_data = json.loads(modified_string)
-            vectors=[]
-
-            for index,item in enumerate(json_data):
-              print(index,item)
-              try:
-                response = client.embeddings.create(
-                input=item,
-                model="text-embedding-3-small"
-                )
-                vectors.append(
-                  {
-                  "id": str(index), 
-                  "values": response.data[0].embedding, 
-                  "metadata": item
-                  },
-                )
-              except Exception as e:
-                  print("An error occurred:", str(e))
-                  return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)
-
-            #subir a pinecone 
-            try:
-              response=indexPC.upsert(
-                vectors=vectors,
-                namespace="ns1"
-                )
-              print(response)
-            except Exception as e:
-                  print("An error occurred:", str(e))
-                  return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)
-            return Response(json_data, status=status.HTTP_200_OK)
-        
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+          # Generate a UUID
+          new_uuid = str(uuid.uuid4())
+          #print(response.data[0].embedding)
+          vectors.append(
+            {
+            "id": new_uuid, 
+            "values": response.data[0].embedding, 
+            "metadata": row
+            },
+          )
+          response=indexPC.upsert(
+              vectors=vectors,
+          namespace="ns1"
+          )
+          print(response)
+        return Response({'status': "succes"}, status=status.HTTP_200_OK)
+      except Exception as e:
+          print("An error occurred:", str(e))
+          return Response({'status': "error", "error":e}, status=status.HTTP_400_BAD_REQUEST)   
